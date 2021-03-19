@@ -126,12 +126,6 @@ contract AlgoPainterGweiItem is AlgoPainterAccessControl, ERC721 {
         bytes32 hashedMint = hashMint(hash, tokenURI);
         address validator = recover(hashedMint, signature);
 
-        uint256 minimumAmount = getMinimumAmount(paints);
-        require(
-            msg.value >= minimumAmount,
-            "AlgoPainterGweiItem: Invalid Amount"
-        );
-
         require(
             validator != address(0),
             "AlgoPainterGweiItem:INVALID_SIGNATURE"
@@ -139,6 +133,12 @@ contract AlgoPainterGweiItem is AlgoPainterAccessControl, ERC721 {
         require(
             hasRole(VALIDATOR_ROLE, validator),
             "AlgoPainterGweiItem:INVALID_VALIDATOR"
+        );
+
+        uint256 minimumAmount = getMinimumAmount(paints);
+        require(
+            msg.value >= minimumAmount,
+            "AlgoPainterGweiItem: Invalid Amount"
         );
 
         _tokenIds.increment();
