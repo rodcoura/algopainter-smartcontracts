@@ -1,0 +1,29 @@
+{
+  "name": "algopainter-smartcontracts",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^3.4.1",
+    "dotenv": "^8.2.0",
+    "truffle-hdwallet-provider": "^1.0.17"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "truffle test --show-events"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/algopainter/algopainter-smartcontracts.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/algopainter/algopainter-smartcontracts/issues"
+  },
+  "homepage": "https://github.com/algopainter/algopainter-smartcontracts#readme"
+}
