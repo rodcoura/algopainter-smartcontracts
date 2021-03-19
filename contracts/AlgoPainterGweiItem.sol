@@ -10,10 +10,10 @@ contract AlgoPainterGweiItem is AlgoPainterAccessControl, ERC721 {
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIds;
 
-    mapping(bytes32 => bool) hahses;
+    mapping(bytes32 => bool) hashes;
 
     address payable owner;
-    uint256 paints;
+    uint256 paitings;
 
     event NewPaint(
         uint256 indexed tokenId,
@@ -82,32 +82,32 @@ contract AlgoPainterGweiItem is AlgoPainterAccessControl, ERC721 {
         }
     }
 
-    function getMinimumAmount(uint256 paintsCount)
+    function getMinimumAmount(uint256 paitingsCount)
         public
         pure
         returns (uint256)
     {
         uint256 minimumAmount = 0;
 
-        if (paintsCount <= 1000) {
+        if (paitingsCount <= 1000) {
             minimumAmount = 0.01 ether;
-        } else if (paintsCount <= 3000) {
+        } else if (paitingsCount <= 3000) {
             minimumAmount = 0.03 ether;
-        } else if (paintsCount <= 6000) {
+        } else if (paitingsCount <= 6000) {
             minimumAmount = 0.04 ether;
-        } else if (paintsCount <= 10000) {
+        } else if (paitingsCount <= 10000) {
             minimumAmount = 0.05 ether;
-        } else if (paintsCount <= 14000) {
+        } else if (paitingsCount <= 14000) {
             minimumAmount = 0.07 ether;
-        } else if (paintsCount <= 14300) {
+        } else if (paitingsCount <= 14300) {
             minimumAmount = 0.1 ether;
-        } else if (paintsCount <= 14500) {
+        } else if (paitingsCount <= 14500) {
             minimumAmount = 0.16 ether;
-        } else if (paintsCount <= 14550) {
+        } else if (paitingsCount <= 14550) {
             minimumAmount = 0.27 ether;
-        } else if (paintsCount <= 14576) {
+        } else if (paitingsCount <= 14576) {
             minimumAmount = 0.49 ether;
-        } else if (paintsCount <= 14590) {
+        } else if (paitingsCount <= 14590) {
             minimumAmount = 0.92 ether;
         } else {
             minimumAmount = 1.85 ether;
@@ -116,14 +116,18 @@ contract AlgoPainterGweiItem is AlgoPainterAccessControl, ERC721 {
         return minimumAmount;
     }
 
-    function mintPaint(
+    function mint(
         bytes32 hash,
         string memory tokenURI,
         bytes calldata signature
     ) public payable returns (uint256) {
-        require(paints < 14599, "AlgoPainterGweiItem: Gwei is retired!");
+        require(
+            hashes[hash] == false,
+            "AlgoPainterGweiItem: Already registered!"
+        );
+        require(paitings < 14599, "AlgoPainterGweiItem: Gwei is retired!");
 
-        bytes32 hashedMint = hashMint(hash, tokenURI);
+        /*bytes32 hashedMint = hashMint(hash, tokenURI);
         address validator = recover(hashedMint, signature);
 
         require(
@@ -133,9 +137,9 @@ contract AlgoPainterGweiItem is AlgoPainterAccessControl, ERC721 {
         require(
             hasRole(VALIDATOR_ROLE, validator),
             "AlgoPainterGweiItem:INVALID_VALIDATOR"
-        );
+        );*/
 
-        uint256 minimumAmount = getMinimumAmount(paints);
+        uint256 minimumAmount = getMinimumAmount(paitings);
         require(
             msg.value >= minimumAmount,
             "AlgoPainterGweiItem: Invalid Amount"
@@ -147,9 +151,9 @@ contract AlgoPainterGweiItem is AlgoPainterAccessControl, ERC721 {
         _mint(msg.sender, newItemId);
         _setTokenURI(newItemId, tokenURI);
 
-        hahses[hash] = true;
+        hashes[hash] = true;
 
-        paints++;
+        paitings++;
 
         emit NewPaint(newItemId, msg.sender, hash);
 
