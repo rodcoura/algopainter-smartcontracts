@@ -14,6 +14,7 @@ contract AlgoPainterGweiItem is AlgoPainterAccessControl, ERC721 {
 
     address payable owner;
     uint256 paintings;
+    uint256 minimumAmount;
 
     event NewPaint(
         uint256 indexed tokenId,
@@ -82,38 +83,8 @@ contract AlgoPainterGweiItem is AlgoPainterAccessControl, ERC721 {
         }
     }
 
-    function getMinimumAmount(uint256 paintingsCount)
-        public
-        pure
-        returns (uint256)
-    {
-        uint256 minimumAmount = 0;
-
-        if (paintingsCount <= 1000) {
-            minimumAmount = 0.01 ether;
-        } else if (paintingsCount <= 3000) {
-            minimumAmount = 0.03 ether;
-        } else if (paintingsCount <= 6000) {
-            minimumAmount = 0.04 ether;
-        } else if (paintingsCount <= 10000) {
-            minimumAmount = 0.05 ether;
-        } else if (paintingsCount <= 14000) {
-            minimumAmount = 0.07 ether;
-        } else if (paintingsCount <= 14300) {
-            minimumAmount = 0.1 ether;
-        } else if (paintingsCount <= 14500) {
-            minimumAmount = 0.16 ether;
-        } else if (paintingsCount <= 14550) {
-            minimumAmount = 0.27 ether;
-        } else if (paintingsCount <= 14576) {
-            minimumAmount = 0.49 ether;
-        } else if (paintingsCount <= 14590) {
-            minimumAmount = 0.92 ether;
-        } else {
-            minimumAmount = 1.85 ether;
-        }
-
-        return minimumAmount;
+    function getMinimumAmount() public view returns (uint256) {
+        return minimumAmount + 0.01 ether;
     }
 
     function mint(bytes32 hash, string memory tokenURI)
@@ -122,15 +93,13 @@ contract AlgoPainterGweiItem is AlgoPainterAccessControl, ERC721 {
         returns (uint256)
     {
         require(hashes[hash] == 0, "AlgoPainterGweiItem: Already registered!");
-        require(paintings < 14599, "AlgoPainterGweiItem: Gwei is retired!");
+        require(paintings < 1000, "AlgoPainterGweiItem: Gwei is retired!");
 
-        uint256 minimumAmount = getMinimumAmount(paintings);
-        require(
-            msg.value >= minimumAmount,
-            "AlgoPainterGweiItem: Invalid Amount"
-        );
+        uint256 minAmount = getMinimumAmount();
+        require(msg.value >= minAmount, "AlgoPainterGweiItem: Invalid Amount");
 
         _tokenIds.increment();
+        minimumAmount = msg.value;
 
         uint256 newItemId = _tokenIds.current();
         _mint(msg.sender, newItemId);
@@ -148,10 +117,6 @@ contract AlgoPainterGweiItem is AlgoPainterAccessControl, ERC721 {
     function withdraw() public {
         require(msg.sender == owner, "AlgoPainterGweiItem: Invalid msg.sender");
         owner.transfer(address(this).balance);
-    }
-
-    function getCurrentAmount() public view returns (uint256) {
-        return getMinimumAmount(paintings + 1);
     }
 
     function getTokenByHash(bytes32 hash) public view returns (uint256) {
