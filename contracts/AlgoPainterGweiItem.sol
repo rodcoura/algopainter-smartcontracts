@@ -114,9 +114,10 @@ contract AlgoPainterGweiItem is AlgoPainterAccessControl, ERC721 {
         return newItemId;
     }
 
-    function withdraw() public {
+    function withdraw(uint256 amount) public returns (bool) {
         require(msg.sender == owner, "AlgoPainterGweiItem: Invalid msg.sender");
-        owner.transfer(address(this).balance);
+        owner.transfer(amount);
+        return true;
     }
 
     function getTokenByHash(bytes32 hash) public view returns (uint256) {

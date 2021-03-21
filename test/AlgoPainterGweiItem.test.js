@@ -73,4 +73,33 @@ contract('AlgoPainterGweiItem', accounts => {
       expect(e.reason).to.be.equal('AlgoPainterGweiItem:INVALID_SIGNATURE', 'fail to check failure');
     }
   });
+
+  it('should fail to try to withdraw with an invalid address', async () => {
+    const instance = await AlgoPainterGweiItem.deployed();
+
+    try {
+      await instance.withdraw(1, {from: accounts[1]});
+    } catch (e) {
+      expect(e.reason).to.be.equal('AlgoPainterGweiItem: Invalid msg.sender', 'fail to check failure');
+    }
+  });
+
+  it('should withdraw with a valid address', async () => {
+    const instance = await AlgoPainterGweiItem.deployed();
+
+    const initialContractBalance = (await web3.eth.getBalance(instance.address)).toString();
+    const initialBalance = (await web3.eth.getBalance(accounts[0])).toString();
+    
+    await instance.withdraw(initialContractBalance);
+
+    const finalContractBalance = (await web3.eth.getBalance(instance.address)).toString();
+    const finalBalance = (await web3.eth.getBalance(accounts[0])).toString();
+
+    expect(initialContractBalance).to.be.equal('10000000000000000');
+    expect(finalContractBalance).to.be.equal('0');
+    // web3.from
+
+    // expect(initialBalance).to.be.equal('92795621050000000003');
+    // expect(finalBalance).to.be.equal('92805018970000000003');
+  });
 });
