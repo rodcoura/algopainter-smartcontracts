@@ -10,10 +10,10 @@ contract AlgoPainterGweiItem is AlgoPainterAccessControl, ERC721 {
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIds;
 
-    mapping(bytes32 => bool) hashes;
+    mapping(bytes32 => uint256) hashes;
 
     address payable owner;
-    uint256 paitings;
+    uint256 paintings;
 
     event NewPaint(
         uint256 indexed tokenId,
@@ -82,32 +82,32 @@ contract AlgoPainterGweiItem is AlgoPainterAccessControl, ERC721 {
         }
     }
 
-    function getMinimumAmount(uint256 paitingsCount)
+    function getMinimumAmount(uint256 paintingsCount)
         public
         pure
         returns (uint256)
     {
         uint256 minimumAmount = 0;
 
-        if (paitingsCount <= 1000) {
+        if (paintingsCount <= 1000) {
             minimumAmount = 0.01 ether;
-        } else if (paitingsCount <= 3000) {
+        } else if (paintingsCount <= 3000) {
             minimumAmount = 0.03 ether;
-        } else if (paitingsCount <= 6000) {
+        } else if (paintingsCount <= 6000) {
             minimumAmount = 0.04 ether;
-        } else if (paitingsCount <= 10000) {
+        } else if (paintingsCount <= 10000) {
             minimumAmount = 0.05 ether;
-        } else if (paitingsCount <= 14000) {
+        } else if (paintingsCount <= 14000) {
             minimumAmount = 0.07 ether;
-        } else if (paitingsCount <= 14300) {
+        } else if (paintingsCount <= 14300) {
             minimumAmount = 0.1 ether;
-        } else if (paitingsCount <= 14500) {
+        } else if (paintingsCount <= 14500) {
             minimumAmount = 0.16 ether;
-        } else if (paitingsCount <= 14550) {
+        } else if (paintingsCount <= 14550) {
             minimumAmount = 0.27 ether;
-        } else if (paitingsCount <= 14576) {
+        } else if (paintingsCount <= 14576) {
             minimumAmount = 0.49 ether;
-        } else if (paitingsCount <= 14590) {
+        } else if (paintingsCount <= 14590) {
             minimumAmount = 0.92 ether;
         } else {
             minimumAmount = 1.85 ether;
@@ -116,30 +116,15 @@ contract AlgoPainterGweiItem is AlgoPainterAccessControl, ERC721 {
         return minimumAmount;
     }
 
-    function mint(
-        bytes32 hash,
-        string memory tokenURI,
-        bytes calldata signature
-    ) public payable returns (uint256) {
-        require(
-            hashes[hash] == false,
-            "AlgoPainterGweiItem: Already registered!"
-        );
-        require(paitings < 14599, "AlgoPainterGweiItem: Gwei is retired!");
+    function mint(bytes32 hash, string memory tokenURI)
+        public
+        payable
+        returns (uint256)
+    {
+        require(hashes[hash] == 0, "AlgoPainterGweiItem: Already registered!");
+        require(paintings < 14599, "AlgoPainterGweiItem: Gwei is retired!");
 
-        /*bytes32 hashedMint = hashMint(hash, tokenURI);
-        address validator = recover(hashedMint, signature);
-
-        require(
-            validator != address(0),
-            "AlgoPainterGweiItem:INVALID_SIGNATURE"
-        );
-        require(
-            hasRole(VALIDATOR_ROLE, validator),
-            "AlgoPainterGweiItem:INVALID_VALIDATOR"
-        );*/
-
-        uint256 minimumAmount = getMinimumAmount(paitings);
+        uint256 minimumAmount = getMinimumAmount(paintings);
         require(
             msg.value >= minimumAmount,
             "AlgoPainterGweiItem: Invalid Amount"
@@ -151,9 +136,9 @@ contract AlgoPainterGweiItem is AlgoPainterAccessControl, ERC721 {
         _mint(msg.sender, newItemId);
         _setTokenURI(newItemId, tokenURI);
 
-        hashes[hash] = true;
+        hashes[hash] = newItemId;
 
-        paitings++;
+        paintings++;
 
         emit NewPaint(newItemId, msg.sender, hash);
 
@@ -163,6 +148,14 @@ contract AlgoPainterGweiItem is AlgoPainterAccessControl, ERC721 {
     function withdraw() public {
         require(msg.sender == owner, "AlgoPainterGweiItem: Invalid msg.sender");
         owner.transfer(address(this).balance);
+    }
+
+    function getCurrentAmount() public view returns (uint256) {
+        return getMinimumAmount(paintings + 1);
+    }
+
+    function getTokenByHash(bytes32 hash) public view returns (uint256) {
+        return hashes[hash];
     }
 
     function updateTokenURI(
