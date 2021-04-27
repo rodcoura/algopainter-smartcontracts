@@ -1,6 +1,15 @@
 const AlgoPainterGweiItem = artifacts.require('AlgoPainterGweiItem');
 
 contract('AlgoPainterGweiItem', accounts => {
+  it('should add account[2] as a white list manager', async () => {
+    const instance = await AlgoPainterGweiItem.deployed();
+
+    const validatorRole = await instance.WHITELIST_MANAGER_ROLE();
+    await instance.grantRole(validatorRole, accounts[2]);
+
+    expect(await instance.hasRole(validatorRole, accounts[2])).to.be.equal(true, 'fail to check accounts[1] as a validator');
+  });
+
   it('should add account[1] as a validator', async () => {
     const instance = await AlgoPainterGweiItem.deployed();
 
@@ -10,6 +19,17 @@ contract('AlgoPainterGweiItem', accounts => {
     expect(await instance.hasRole(validatorRole, accounts[1])).to.be.equal(true, 'fail to check accounts[1] as a validator');
   });
 
+  it('should whitelist account #2 and #3', async () => {
+    const instance = await AlgoPainterGweiItem.deployed();
+
+    await instance.manageWhitelist([accounts[2], accounts[3]], true);
+    const account2Check = await instance.isInWhitelist(accounts[2]);
+    const account3Check = await instance.isInWhitelist(accounts[3]);
+
+    expect(account2Check).to.be.true;
+    expect(account3Check).to.be.true;
+  });
+
   it('should mint a new paint', async () => {
     const instance = await AlgoPainterGweiItem.deployed();
 
@@ -17,13 +37,13 @@ contract('AlgoPainterGweiItem', accounts => {
     const tokenURI = 'URI'
     const owner = accounts[2];
 
-    await instance.mint(paintHash, tokenURI, { from: owner, value: web3.utils.toWei('0.01', 'ether') });
+    await instance.mint(paintHash, tokenURI, { from: owner, value: web3.utils.toWei('0.1', 'ether') });
 
     const returnedTokenURI = await instance.tokenURI(1);
-    const minimumAmount = await instance.getMinimumAmount();
+    const minimumAmount = await instance.getMinimumAmount(await instance.totalSupply());
 
     expect(returnedTokenURI).to.be.equal('URI');
-    expect(minimumAmount.toString()).to.be.equal('20000000000000000', 'fail to theck increment of minimum value');
+    expect(minimumAmount.toString()).to.be.equal(web3.utils.toWei('0.1', 'ether').toString(), 'fail to theck increment of minimum value');
   });
 
   it('should update a token URI based on a valid signature', async () => {
@@ -74,7 +94,7 @@ contract('AlgoPainterGweiItem', accounts => {
     }
   });
 
-  it('should fail to try to withdraw with an invalid address', async () => {
+  it('should fail to try to withdraw with from invalid address', async () => {
     const instance = await AlgoPainterGweiItem.deployed();
 
     try {
@@ -95,11 +115,7 @@ contract('AlgoPainterGweiItem', accounts => {
     const finalContractBalance = (await web3.eth.getBalance(instance.address)).toString();
     const finalBalance = (await web3.eth.getBalance(accounts[0])).toString();
 
-    expect(initialContractBalance).to.be.equal('10000000000000000');
+    expect(initialContractBalance).to.be.equal(web3.utils.toWei('0.1', 'ether').toString());
     expect(finalContractBalance).to.be.equal('0');
-    // web3.from
-
-    // expect(initialBalance).to.be.equal('92795621050000000003');
-    // expect(finalBalance).to.be.equal('92805018970000000003');
   });
 });

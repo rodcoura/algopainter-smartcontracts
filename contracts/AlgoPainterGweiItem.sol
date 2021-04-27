@@ -9,6 +9,7 @@ import "./AlgoPainterAccessControl.sol";
 contract AlgoPainterGweiItem is AlgoPainterAccessControl, ERC721 {
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIds;
+    mapping(address => bool) whitelist;
 
     mapping(bytes32 => uint256) hashes;
 
@@ -24,6 +25,20 @@ contract AlgoPainterGweiItem is AlgoPainterAccessControl, ERC721 {
 
     constructor() ERC721("Algo Painter Gwei Item", "APGI") {
         owner = msg.sender;
+        whitelist[owner] = true;
+    }
+
+    function manageWhitelist(address[] calldata _addresses, bool _flag)
+        public
+        onlyRole(WHITELIST_MANAGER_ROLE)
+    {
+        for (uint256 i = 0; i < _addresses.length; i++) {
+            whitelist[_addresses[i]] = _flag;
+        }
+    }
+
+    function isInWhitelist(address _address) public view returns (bool) {
+        return whitelist[_address];
     }
 
     function hashData(uint256 tokenId, string memory tokenURI)
@@ -83,8 +98,24 @@ contract AlgoPainterGweiItem is AlgoPainterAccessControl, ERC721 {
         }
     }
 
-    function getMinimumAmount() public view returns (uint256) {
-        return minimumAmount + 0.01 ether;
+    function getMinimumAmount(uint256 supply) public view returns (uint256) {
+        if (supply <= 300) {
+            return 0.1 ether;
+        } else if (supply <= 500) {
+            return 0.2 ether;
+        } else if (supply <= 700) {
+            return 0.4 ether;
+        } else if (supply <= 800) {
+            return 0.8 ether;
+        } else if (supply <= 900) {
+            return 1.6 ether;
+        } else if (supply <= 950) {
+            return 3.2 ether;
+        } else if (supply <= 985) {
+            return 6.4 ether;
+        } else if (supply <= 1000) {
+            return 12.8 ether;
+        }
     }
 
     function mint(bytes32 hash, string memory tokenURI)
@@ -92,10 +123,14 @@ contract AlgoPainterGweiItem is AlgoPainterAccessControl, ERC721 {
         payable
         returns (uint256)
     {
+        require(
+            isInWhitelist(msg.sender),
+            "AlgoPainterGweiItem: Only whitelisted!"
+        );
         require(hashes[hash] == 0, "AlgoPainterGweiItem: Already registered!");
         require(paintings < 1000, "AlgoPainterGweiItem: Gwei is retired!");
 
-        uint256 minAmount = getMinimumAmount();
+        uint256 minAmount = getMinimumAmount(totalSupply());
         require(msg.value >= minAmount, "AlgoPainterGweiItem: Invalid Amount");
 
         _tokenIds.increment();
