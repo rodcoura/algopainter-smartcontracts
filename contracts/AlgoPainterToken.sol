@@ -9,7 +9,7 @@ contract AlgoPainterToken is AlgoPainterAccessControl, ERC20 {
     string public SYMBOL;
     string public NAME;
     uint8 public DECIMALS = 18;
-    uint256 public INITIAL_SUPPLY = 10000000 * 10**18;
+    uint256 public INITIAL_SUPPLY = 100000000 * 10**18;
 
     constructor(string memory name, string memory symbol) ERC20(name, symbol) {
         NAME = name;

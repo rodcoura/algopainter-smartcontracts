@@ -12,10 +12,11 @@ contract AlgoPainterGweiItem is AlgoPainterAccessControl, ERC721 {
     mapping(address => bool) whitelist;
 
     mapping(bytes32 => uint256) hashes;
+    uint256[] places;
+    mapping(uint256 => bool) specialPlaces;
+    bool canSetSpecialPlances;
 
     address payable owner;
-    uint256 paintings;
-    uint256 minimumAmount;
 
     event NewPaint(
         uint256 indexed tokenId,
@@ -26,7 +27,25 @@ contract AlgoPainterGweiItem is AlgoPainterAccessControl, ERC721 {
     constructor() ERC721("Algo Painter Gwei Item", "APGI") {
         owner = msg.sender;
         whitelist[owner] = true;
+        canSetSpecialPlances = true;
     }
+
+    function closeSpecialPlaces() public onlyRole(DEFAULT_ADMIN_ROLE) {
+        canSetSpecialPlances = false;
+    }
+
+    function setSpecialPlace(uint256 place)
+        public
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
+        require(
+            canSetSpecialPlances,
+            "AlgoPainterGweiItem: Can not set special places anymore!"
+        );
+        specialPlaces[place] = true;
+    }
+
+    function allowItemToSelectSpecialPlace(uint256 _id, uint256) public {}
 
     function manageWhitelist(address[] calldata _addresses, bool _flag)
         public
@@ -128,21 +147,18 @@ contract AlgoPainterGweiItem is AlgoPainterAccessControl, ERC721 {
             "AlgoPainterGweiItem: Only whitelisted!"
         );
         require(hashes[hash] == 0, "AlgoPainterGweiItem: Already registered!");
-        require(paintings < 1000, "AlgoPainterGweiItem: Gwei is retired!");
+        require(totalSupply() < 1000, "AlgoPainterGweiItem: Gwei is retired!");
 
         uint256 minAmount = getMinimumAmount(totalSupply());
         require(msg.value >= minAmount, "AlgoPainterGweiItem: Invalid Amount");
 
         _tokenIds.increment();
-        minimumAmount = msg.value;
 
         uint256 newItemId = _tokenIds.current();
         _mint(msg.sender, newItemId);
         _setTokenURI(newItemId, tokenURI);
 
         hashes[hash] = newItemId;
-
-        paintings++;
 
         emit NewPaint(newItemId, msg.sender, hash);
 
