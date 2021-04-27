@@ -22,6 +22,12 @@ contract AlgoPainterTimeLock {
         uint256 amount
     );
 
+    event NewPayment(
+        address indexed beneficiary,
+        uint256 amount,
+        uint256 remainingAmount
+    );
+
     IERC20 public token;
 
     address owner;
@@ -93,6 +99,8 @@ contract AlgoPainterTimeLock {
         nextPayments[msg.sender] = nextPayment + 1;
         remainingAmount[msg.sender] -= amount;
         token.transfer(msg.sender, amount);
+
+        emit NewPayment(msg.sender, amount, remainingAmount[msg.sender]);
     }
 
     function getRemainingAmount(address _beneficiary)
