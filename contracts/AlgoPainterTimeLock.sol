@@ -90,6 +90,7 @@ contract AlgoPainterTimeLock {
             }
         }
 
+        nextPayments[msg.sender] = nextPayment + 1;
         remainingAmount[msg.sender] -= amount;
         token.transfer(msg.sender, amount);
     }
@@ -107,10 +108,15 @@ contract AlgoPainterTimeLock {
         view
         returns (uint256 releaseTime, uint256 amount)
     {
-        uint256 nextPayment = nextPayments[msg.sender];
-        PaymentInfo[] storage info = accounts[msg.sender];
+        uint256 nextPayment = nextPayments[_beneficiary];
+        PaymentInfo[] storage info = accounts[_beneficiary];
 
-        releaseTime = info[nextPayment].releaseTime;
-        amount = info[nextPayment].amount;
+        if (nextPayment < info.length) {
+            releaseTime = info[nextPayment].releaseTime;
+            amount = info[nextPayment].amount;
+        } else {
+            releaseTime = 0;
+            amount = 0;
+        }
     }
 }
