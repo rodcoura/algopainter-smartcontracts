@@ -22,11 +22,9 @@ contract.only('AlgoPainterToken', accounts => {
 
     await timelock.requestPayment({ from: accounts[1] });
     let remainingAmount = await timelock.getRemainingAmount(accounts[1]);
-    let nextPayment = await timelock.getNextPayment(accounts[1]);
     let balanceAfterRequestAccount1 = await algop.balanceOf(accounts[1]);
     expect(balanceAfterRequestAccount1.toString()).to.be.equal('1000000000000000000', 'fail to check payment #1 account #1');
     expect(remainingAmount.toString()).to.be.equal('5000000000000000000', 'fail to check remaining amount #1 account #1');
-    expect(nextPayment.amount.toString()).to.be.equal('2000000000000000000', 'fail to check next payment amount #1 account #1');
 
     console.log('Waiting 10s to second payment');
     sleep.sleep(10);
@@ -34,21 +32,17 @@ contract.only('AlgoPainterToken', accounts => {
     await timelock.requestPayment({ from: accounts[1] });
 
     balanceAfterRequestAccount1 = await algop.balanceOf(accounts[1]);
-    nextPayment = await timelock.getNextPayment(accounts[1]);
     remainingAmount = await timelock.getRemainingAmount(accounts[1]);
     expect(balanceAfterRequestAccount1.toString()).to.be.equal('3000000000000000000', 'fail to check payment #2 account #1');
     expect(remainingAmount.toString()).to.be.equal('3000000000000000000', 'fail to check remaining amount #2 account #1');
-    expect(nextPayment.amount.toString()).to.be.equal('3000000000000000000', 'fail to check next payment amount #2 account #1');
 
     console.log('Waiting 10s to third payment');
     sleep.sleep(10);
 
     await timelock.requestPayment({ from: accounts[1] });
     remainingAmount = await await timelock.getRemainingAmount(accounts[1]);
-    nextPayment = await timelock.getNextPayment(accounts[1]);
     balanceAfterRequestAccount1 = await algop.balanceOf(accounts[1]);
     expect(balanceAfterRequestAccount1.toString()).to.be.equal('6000000000000000000', 'fail to check payment #3 account #1');
     expect(remainingAmount.toString()).to.be.equal('0', 'fail to check remaining amount #3 account #1');
-    expect(nextPayment.amount.toString()).to.be.equal('0', 'fail to check next payment amount #3 account #1');
   });
 });

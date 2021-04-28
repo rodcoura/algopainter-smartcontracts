@@ -11,10 +11,9 @@ contract AlgoPainterTimeLock {
         bool isRequested;
     }
 
-    mapping(address => PaymentInfo[]) public accounts;
-    mapping(address => uint256) public remainingAmount;
-    mapping(address => uint256) public lastAllowedReleaseTime;
-    mapping(address => uint256) public nextPayments;
+    mapping(address => PaymentInfo[]) private accounts;
+    mapping(address => uint256) private remainingAmount;
+    mapping(address => uint256) private lastAllowedReleaseTime;
 
     event NewScheduledPayment(
         address indexed beneficiary,
@@ -85,18 +84,15 @@ contract AlgoPainterTimeLock {
 
     function requestPayment() public {
         uint256 amount = 0;
-        uint256 nextPayment = nextPayments[msg.sender];
         PaymentInfo[] storage info = accounts[msg.sender];
 
-        for (uint256 i = nextPayment; i < info.length; i++) {
+        for (uint256 i = 0; i < info.length; i++) {
             if (getNow() > info[i].releaseTime && !info[i].isRequested) {
                 amount += info[i].amount;
                 info[i].isRequested = true;
-                nextPayment = i;
             }
         }
 
-        nextPayments[msg.sender] = nextPayment + 1;
         remainingAmount[msg.sender] -= amount;
         token.transfer(msg.sender, amount);
 
@@ -111,20 +107,33 @@ contract AlgoPainterTimeLock {
         return remainingAmount[_beneficiary];
     }
 
-    function getNextPayment(address _beneficiary)
+    function getPaymentInfoLength(address _beneficiary, uint256 _index)
         public
         view
-        returns (uint256 releaseTime, uint256 amount)
+        returns (uint256)
     {
-        uint256 nextPayment = nextPayments[_beneficiary];
+        return accounts[_beneficiary].length;
+    }
+
+    function getPaymentInfo(address _beneficiary, uint256 _index)
+        public
+        view
+        returns (
+            uint256 releaseTime,
+            uint256 amount,
+            bool isRequested
+        )
+    {
         PaymentInfo[] storage info = accounts[_beneficiary];
 
-        if (nextPayment < info.length) {
-            releaseTime = info[nextPayment].releaseTime;
-            amount = info[nextPayment].amount;
+        if (_index < info.length) {
+            releaseTime = info[_index].releaseTime;
+            amount = info[_index].amount;
+            isRequested = info[_index].isRequested;
         } else {
             releaseTime = 0;
             amount = 0;
+            isRequested = false;
         }
     }
 }

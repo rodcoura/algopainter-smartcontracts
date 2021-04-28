@@ -18,6 +18,10 @@ contract AlgoPainterToken is AlgoPainterAccessControl, ERC20 {
         _mint(msg.sender, INITIAL_SUPPLY);
     }
 
+    function burn(uint256 _amount) public {
+        _burn(msg.sender, _amount);
+    }
+
     function _beforeTokenTransfer(
         address from,
         address to,
