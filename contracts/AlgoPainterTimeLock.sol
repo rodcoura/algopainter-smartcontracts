@@ -2,8 +2,9 @@
 pragma solidity >=0.6.0;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "./AlgoPainterAccessControl.sol";
 
-contract AlgoPainterTimeLock {
+contract AlgoPainterTimeLock is AlgoPainterAccessControl {
     // custom data structure to hold locked funds and time
     struct PaymentInfo {
         uint256 amount;
@@ -14,6 +15,7 @@ contract AlgoPainterTimeLock {
     mapping(address => PaymentInfo[]) private accounts;
     mapping(address => uint256) private remainingAmount;
     mapping(address => uint256) private lastAllowedReleaseTime;
+    uint256 private emergencyWithdrawLimit;
 
     event NewScheduledPayment(
         address indexed beneficiary,
@@ -29,11 +31,9 @@ contract AlgoPainterTimeLock {
 
     IERC20 public token;
 
-    address owner;
-
-    constructor(IERC20 _token) {
-        owner = msg.sender;
+    constructor(IERC20 _token, uint256 _emergencyWithdrawLimit) {
         token = _token;
+        emergencyWithdrawLimit = _emergencyWithdrawLimit;
     }
 
     function getNow() public view returns (uint256) {
@@ -70,8 +70,7 @@ contract AlgoPainterTimeLock {
         address _beneficiary,
         uint256 _releaseTime,
         uint256 _amount
-    ) public {
-        require(msg.sender == owner, "INVALID SENDER");
+    ) public onlyRole(DEFAULT_ADMIN_ROLE) {
         require(_releaseTime > lastAllowedReleaseTime[_beneficiary]);
 
         accounts[_beneficiary].push(PaymentInfo(_amount, _releaseTime, false));
@@ -97,6 +96,14 @@ contract AlgoPainterTimeLock {
         token.transfer(msg.sender, amount);
 
         emit NewPayment(msg.sender, amount, remainingAmount[msg.sender]);
+    }
+
+    function emergencyWithdraw(uint256 _amount)
+        public
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
+        require(getNow() > emergencyWithdrawLimit, "IT IS NOT ALLOWED");
+        token.transfer(msg.sender, _amount);
     }
 
     function getRemainingAmount(address _beneficiary)
