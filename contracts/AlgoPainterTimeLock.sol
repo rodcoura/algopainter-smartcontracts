@@ -72,17 +72,19 @@ contract AlgoPainterTimeLock is AlgoPainterAccessControl {
         uint256 schedule = _startDate;
         uint256 cliffAmount = 0;
 
-        for (uint256 i = 0; i < _cliffPeriods; i++) {
-            cliffAmount += _amountByPeriod;
-            schedule += _interval;
-        }
-
-        if (cliffAmount > 0) {
-            schedulePayment(_beneficiary, schedule, cliffAmount);
-        }
-
-        for (uint256 i = _cliffPeriods; i < _vestingPeriods; i++) {
-            schedulePayment(_beneficiary, schedule, _amountByPeriod);
+        for (uint256 i = 0; i < _vestingPeriods; i++) {
+            if (_cliffPeriods > 0 && i + 1 == _cliffPeriods) {
+                schedulePayment(
+                    _beneficiary,
+                    schedule,
+                    _amountByPeriod * _cliffPeriods
+                );
+            } else if (
+                _cliffPeriods == 0 ||
+                (_cliffPeriods > 0 && i + 1 > _cliffPeriods)
+            ) {
+                schedulePayment(_beneficiary, schedule, _amountByPeriod);
+            }
             schedule += _interval;
         }
     }
@@ -92,7 +94,10 @@ contract AlgoPainterTimeLock is AlgoPainterAccessControl {
         uint256 _releaseTime,
         uint256 _amount
     ) public onlyRole(DEFAULT_ADMIN_ROLE) {
-        require(_releaseTime > lastAllowedReleaseTime[_beneficiary]);
+        require(
+            _releaseTime > lastAllowedReleaseTime[_beneficiary],
+            "Invalid release time"
+        );
 
         accounts[_beneficiary].push(PaymentInfo(_amount, _releaseTime, false));
         lastAllowedReleaseTime[_beneficiary] = _releaseTime;

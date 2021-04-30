@@ -158,7 +158,7 @@ contract.only('AlgoPainterToken', accounts => {
     }
   });
 
-  it.only('should schedule several payments using schedulePayments', async () => {
+  it('should schedule several payments using schedulePayments', async () => {
     const now = new Date();
     now.setSeconds(now.getSeconds() + 20);
     
@@ -188,5 +188,73 @@ contract.only('AlgoPainterToken', accounts => {
         expect(balance.toString()).to.be.equal(web3.utils.toWei((i*j).toString()).toString(), `fail to check balance account #${j} payment #${i}`);
       }
     }
+  });
+
+  it.only('should schedule several payments using schedulePayments with cliff/vesting', async () => {
+    const now = new Date();
+    now.setSeconds(now.getSeconds() + 20);
+    
+    const algop = await AlgoPainterToken.new('AlgoPainter Token', 'ALGOP');
+    const timelock = await AlgoPainterTimeLock.new(algop.address, Math.floor(now / 1000).toString());
+
+    const ref = await timelock.getNow();
+
+    await algop.transfer(timelock.address, web3.utils.toWei('1000', 'ether'));
+
+    await timelock.schedulePayments(await timelock.addSeconds(ref, 10), await timelock.getSecondInterval(10), 2, 6, accounts[1], web3.utils.toWei('1', 'ether'));
+
+    await timelock.requestPayment({ from: accounts[1] });
+    let balance = await algop.balanceOf(accounts[1]);
+    let remainingAmount = await timelock.getRemainingAmount(accounts[1]);
+    expect(remainingAmount.toString()).to.be.equal('6000000000000000000', 'remaining amount #0 period');
+    expect(balance.toString()).to.be.equal('0', '');
+
+    console.log(`Waiting period #1`);
+    sleep.sleep(10);
+    await timelock.requestPayment({ from: accounts[1] });
+    balance = await algop.balanceOf(accounts[1]);
+    remainingAmount = await timelock.getRemainingAmount(accounts[1]);
+    expect(remainingAmount.toString()).to.be.equal('6000000000000000000', 'remaining amount #1 period');
+    expect(balance.toString()).to.be.equal('0', '');
+
+    console.log(`Waiting period #2`);
+    sleep.sleep(10);
+    await timelock.requestPayment({ from: accounts[1] });
+    balance = await algop.balanceOf(accounts[1]);
+    remainingAmount = await timelock.getRemainingAmount(accounts[1]);
+    expect(remainingAmount.toString()).to.be.equal('4000000000000000000', 'remaining amount #2 period');
+    expect(balance.toString()).to.be.equal('2000000000000000000', '');
+
+    console.log(`Waiting period #3`);
+    sleep.sleep(10);
+    await timelock.requestPayment({ from: accounts[1] });
+    balance = await algop.balanceOf(accounts[1]);
+    remainingAmount = await timelock.getRemainingAmount(accounts[1]);
+    expect(remainingAmount.toString()).to.be.equal('3000000000000000000', 'remaining amount #3 period');
+    expect(balance.toString()).to.be.equal('3000000000000000000', '');
+
+    console.log(`Waiting period #4`);
+    sleep.sleep(10);
+    await timelock.requestPayment({ from: accounts[1] });
+    balance = await algop.balanceOf(accounts[1]);
+    remainingAmount = await timelock.getRemainingAmount(accounts[1]);
+    expect(remainingAmount.toString()).to.be.equal('2000000000000000000', 'remaining amount #4 period');
+    expect(balance.toString()).to.be.equal('4000000000000000000', '');
+
+    console.log(`Waiting period #5`);
+    sleep.sleep(10);
+    await timelock.requestPayment({ from: accounts[1] });
+    balance = await algop.balanceOf(accounts[1]);
+    remainingAmount = await timelock.getRemainingAmount(accounts[1]);
+    expect(remainingAmount.toString()).to.be.equal('1000000000000000000', 'remaining amount #4 period');
+    expect(balance.toString()).to.be.equal('5000000000000000000', '');
+
+    console.log(`Waiting period #6`);
+    sleep.sleep(10);
+    await timelock.requestPayment({ from: accounts[1] });
+    balance = await algop.balanceOf(accounts[1]);
+    remainingAmount = await timelock.getRemainingAmount(accounts[1]);
+    expect(remainingAmount.toString()).to.be.equal('0', 'remaining amount #4 period');
+    expect(balance.toString()).to.be.equal('6000000000000000000', '');
   });
 });
