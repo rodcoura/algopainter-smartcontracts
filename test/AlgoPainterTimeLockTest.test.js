@@ -115,7 +115,7 @@ contract.only('AlgoPainterToken', accounts => {
     expect(balance.toString()).to.be.equal( web3.utils.toWei('100000000', 'ether').toString(), 'fail to check the balance after emergency withdraw');
   });
 
-  it.only('should schedule several payments for several accounts and request payment for each of them', async () => {
+  it('should schedule several payments for several accounts and request payment for each of them', async () => {
     const now = new Date();
     now.setSeconds(now.getSeconds() + 20);
     
@@ -123,6 +123,8 @@ contract.only('AlgoPainterToken', accounts => {
     const timelock = await AlgoPainterTimeLock.new(algop.address, Math.floor(now / 1000).toString());
     
     await algop.transfer(timelock.address, web3.utils.toWei('1000', 'ether'));
+
+    expect((await timelock.getEmergencyWithdrawLimit()).toString()).to.be.equal(Math.floor(now / 1000).toString(), 'fail to check emergency withdraw release time');
 
     const scheduledDate = await timelock.getNow();
 
@@ -153,6 +155,38 @@ contract.only('AlgoPainterToken', accounts => {
       await timelock.requestPayment({ from: accounts[i] });
       const balance = await algop.balanceOf(accounts[i]);
       expect(balance.toString()).to.be.equal(web3.utils.toWei((i+i).toString()), `fail to check #${i} #3`);
+    }
+  });
+
+  it.only('should schedule several payments using schedulePayments', async () => {
+    const now = new Date();
+    now.setSeconds(now.getSeconds() + 20);
+    
+    const algop = await AlgoPainterToken.new('AlgoPainter Token', 'ALGOP');
+    const timelock = await AlgoPainterTimeLock.new(algop.address, Math.floor(now / 1000).toString());
+
+    const ref = await timelock.getNow();
+
+    await algop.transfer(timelock.address, web3.utils.toWei('1000', 'ether'));
+
+    for (let i = 1; i <= 9; i++) {
+      await timelock.schedulePayments(await timelock.addSeconds(ref, 10), await timelock.getSecondInterval(10), 0, 3, accounts[i], web3.utils.toWei(i.toString(), 'ether'));
+    }
+
+    for (let i = 1; i <= 9; i++) {
+      const remainingAmount = await timelock.getRemainingAmount(accounts[i]);
+      expect(remainingAmount.toString()).to.be.equal(web3.utils.toWei((3 * i).toString(), 'ether'), `fail to check accounts[${i}] remaining amount`);
+    }
+    
+    for (let i = 1; i <= 3; i++) {
+      console.log(`Waiting payment ${i}`);
+      sleep.sleep(10);
+
+      for (let j = 1; j <= 9; j++) {
+        await timelock.requestPayment({ from: accounts[j] });
+        const balance = await algop.balanceOf(accounts[j]);
+        expect(balance.toString()).to.be.equal(web3.utils.toWei((i*j).toString()).toString(), `fail to check balance account #${j} payment #${i}`);
+      }
     }
   });
 });

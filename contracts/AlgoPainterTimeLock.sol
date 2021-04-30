@@ -42,7 +42,7 @@ contract AlgoPainterTimeLock is AlgoPainterAccessControl {
 
     function addSeconds(uint256 _ref, uint256 _amount)
         public
-        view
+        pure
         returns (uint256)
     {
         uint256 result = _ref;
@@ -53,17 +53,38 @@ contract AlgoPainterTimeLock is AlgoPainterAccessControl {
         return result;
     }
 
-    function addDays(uint256 _ref, uint256 _amount)
-        public
-        view
-        returns (uint256)
-    {
-        uint256 result = _ref;
-        for (uint256 i = 0; i < _amount; i++) {
-            result = result + 1 days;
+    function getDayInterval(uint256 _amount) public pure returns (uint256) {
+        return (0 + 1 days) * _amount;
+    }
+
+    function getSecondInterval(uint256 _amount) public pure returns (uint256) {
+        return (0 + 1 seconds) * _amount;
+    }
+
+    function schedulePayments(
+        uint256 _startDate,
+        uint256 _interval,
+        uint256 _cliffPeriods,
+        uint256 _vestingPeriods,
+        address _beneficiary,
+        uint256 _amountByPeriod
+    ) public onlyRole(DEFAULT_ADMIN_ROLE) {
+        uint256 schedule = _startDate;
+        uint256 cliffAmount = 0;
+
+        for (uint256 i = 0; i < _cliffPeriods; i++) {
+            cliffAmount += _amountByPeriod;
+            schedule += _interval;
         }
 
-        return result;
+        if (cliffAmount > 0) {
+            schedulePayment(_beneficiary, schedule, cliffAmount);
+        }
+
+        for (uint256 i = _cliffPeriods; i < _vestingPeriods; i++) {
+            schedulePayment(_beneficiary, schedule, _amountByPeriod);
+            schedule += _interval;
+        }
     }
 
     function schedulePayment(
@@ -98,6 +119,10 @@ contract AlgoPainterTimeLock is AlgoPainterAccessControl {
         emit NewPayment(msg.sender, amount, remainingAmount[msg.sender]);
     }
 
+    function getEmergencyWithdrawLimit() public view returns (uint256) {
+        return emergencyWithdrawLimit;
+    }
+
     function emergencyWithdraw(uint256 _amount)
         public
         onlyRole(DEFAULT_ADMIN_ROLE)
@@ -114,7 +139,7 @@ contract AlgoPainterTimeLock is AlgoPainterAccessControl {
         return remainingAmount[_beneficiary];
     }
 
-    function getPaymentInfoLength(address _beneficiary, uint256 _index)
+    function getPaymentInfoLength(address _beneficiary)
         public
         view
         returns (uint256)
