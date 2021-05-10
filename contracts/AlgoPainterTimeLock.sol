@@ -70,7 +70,6 @@ contract AlgoPainterTimeLock is AlgoPainterAccessControl {
         uint256 _amountByPeriod
     ) public onlyRole(DEFAULT_ADMIN_ROLE) {
         uint256 schedule = _startDate;
-        uint256 cliffAmount = 0;
 
         for (uint256 i = 0; i < _vestingPeriods; i++) {
             if (_cliffPeriods > 0 && i + 1 == _cliffPeriods) {
