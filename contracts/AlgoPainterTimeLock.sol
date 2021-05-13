@@ -15,7 +15,6 @@ contract AlgoPainterTimeLock is AlgoPainterAccessControl {
     mapping(address => PaymentInfo[]) private accounts;
     mapping(address => uint256) private remainingAmount;
     mapping(address => uint256) private lastAllowedReleaseTime;
-    uint256 private emergencyWithdrawLimit;
 
     event NewScheduledPayment(
         address indexed beneficiary,
@@ -29,7 +28,8 @@ contract AlgoPainterTimeLock is AlgoPainterAccessControl {
         uint256 remainingAmount
     );
 
-    IERC20 public token;
+    uint256 private immutable emergencyWithdrawLimit;
+    IERC20 public immutable token;
 
     constructor(IERC20 _token, uint256 _emergencyWithdrawLimit) {
         token = _token;
