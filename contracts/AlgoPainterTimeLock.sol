@@ -30,6 +30,8 @@ contract AlgoPainterTimeLock is AlgoPainterAccessControl {
         uint256 remainingAmount
     );
 
+    event EmergencyWithdrawal(address indexed sender, uint256 amount);
+
     uint256 private constant ZERO = 0;
 
     uint256 private immutable emergencyWithdrawLimit;
@@ -124,7 +126,8 @@ contract AlgoPainterTimeLock is AlgoPainterAccessControl {
         }
 
         remainingAmount[msg.sender] = remainingAmount[msg.sender].sub(amount);
-        token.transfer(msg.sender, amount);
+
+        require(token.transfer(msg.sender, amount), "FAIL TO TRANSFER");
 
         emit NewPayment(msg.sender, amount, remainingAmount[msg.sender]);
     }
@@ -138,7 +141,9 @@ contract AlgoPainterTimeLock is AlgoPainterAccessControl {
         onlyRole(DEFAULT_ADMIN_ROLE)
     {
         require(getNow() > emergencyWithdrawLimit, "IT IS NOT ALLOWED");
-        token.transfer(msg.sender, _amount);
+        require(token.transfer(msg.sender, _amount), "FAIL TO TRANSFER");
+
+        emit EmergencyWithdrawal(msg.sender, _amount);
     }
 
     function getRemainingAmount(address _beneficiary)
