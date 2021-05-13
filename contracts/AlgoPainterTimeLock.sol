@@ -166,10 +166,6 @@ contract AlgoPainterTimeLock is AlgoPainterAccessControl {
             releaseTime = info[_index].releaseTime;
             amount = info[_index].amount;
             isRequested = info[_index].isRequested;
-        } else {
-            releaseTime = 0;
-            amount = 0;
-            isRequested = false;
         }
     }
 }

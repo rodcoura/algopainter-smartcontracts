@@ -137,4 +137,12 @@ contract('AlgoPainterGweiItem', accounts => {
       expect(e.reason).to.be.equal('AlgoPainterGweiItem:INVALID_SENDER', 'fail to check failure');
     }
   });
+
+  it.only('should unlock minting for everyone after 100 units', async () => {
+    const result1 = await instance.canMint(accounts[4], 10);
+    const result2 = await instance.canMint(accounts[4], 101);
+
+    expect(result1).to.be.false;
+    expect(result2).to.be.true;
+  });
 });
