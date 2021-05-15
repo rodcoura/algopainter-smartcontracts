@@ -2,10 +2,12 @@
 pragma solidity >=0.6.0;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/math/SafeMath.sol";
 import "./AlgoPainterAccessControl.sol";
 
 contract AlgoPainterTimeLock is AlgoPainterAccessControl {
-    // custom data structure to hold locked funds and time
+    using SafeMath for uint256;
+
     struct PaymentInfo {
         uint256 amount;
         uint256 releaseTime;
@@ -15,7 +17,6 @@ contract AlgoPainterTimeLock is AlgoPainterAccessControl {
     mapping(address => PaymentInfo[]) private accounts;
     mapping(address => uint256) private remainingAmount;
     mapping(address => uint256) private lastAllowedReleaseTime;
-    uint256 private emergencyWithdrawLimit;
 
     event NewScheduledPayment(
         address indexed beneficiary,
@@ -29,7 +30,12 @@ contract AlgoPainterTimeLock is AlgoPainterAccessControl {
         uint256 remainingAmount
     );
 
-    IERC20 public token;
+    event EmergencyWithdrawal(address indexed sender, uint256 amount);
+
+    uint256 private constant ZERO = 0;
+
+    uint256 private immutable emergencyWithdrawLimit;
+    IERC20 public immutable token;
 
     constructor(IERC20 _token, uint256 _emergencyWithdrawLimit) {
         token = _token;
@@ -47,18 +53,18 @@ contract AlgoPainterTimeLock is AlgoPainterAccessControl {
     {
         uint256 result = _ref;
         for (uint256 i = 0; i < _amount; i++) {
-            result = result + 1 seconds;
+            result = result.add(1 seconds);
         }
 
         return result;
     }
 
     function getDayInterval(uint256 _amount) public pure returns (uint256) {
-        return (0 + 1 days) * _amount;
+        return ZERO.add(1 days).mul(_amount);
     }
 
     function getSecondInterval(uint256 _amount) public pure returns (uint256) {
-        return (0 + 1 seconds) * _amount;
+        return ZERO.add(1 seconds).mul(_amount);
     }
 
     function schedulePayments(
@@ -72,7 +78,7 @@ contract AlgoPainterTimeLock is AlgoPainterAccessControl {
         uint256 schedule = _startDate;
 
         for (uint256 i = 0; i < _vestingPeriods; i++) {
-            if (_cliffPeriods > 0 && i + 1 == _cliffPeriods) {
+            if (_cliffPeriods > 0 && i.add(1) == _cliffPeriods) {
                 schedulePayment(
                     _beneficiary,
                     schedule,
@@ -80,11 +86,11 @@ contract AlgoPainterTimeLock is AlgoPainterAccessControl {
                 );
             } else if (
                 _cliffPeriods == 0 ||
-                (_cliffPeriods > 0 && i + 1 > _cliffPeriods)
+                (_cliffPeriods > 0 && i.add(1) > _cliffPeriods)
             ) {
                 schedulePayment(_beneficiary, schedule, _amountByPeriod);
             }
-            schedule += _interval;
+            schedule = schedule.add(_interval);
         }
     }
 
@@ -101,7 +107,9 @@ contract AlgoPainterTimeLock is AlgoPainterAccessControl {
         accounts[_beneficiary].push(PaymentInfo(_amount, _releaseTime, false));
         lastAllowedReleaseTime[_beneficiary] = _releaseTime;
 
-        remainingAmount[_beneficiary] += _amount;
+        remainingAmount[_beneficiary] = remainingAmount[_beneficiary].add(
+            _amount
+        );
 
         emit NewScheduledPayment(_beneficiary, _releaseTime, _amount);
     }
@@ -112,13 +120,14 @@ contract AlgoPainterTimeLock is AlgoPainterAccessControl {
 
         for (uint256 i = 0; i < info.length; i++) {
             if (getNow() > info[i].releaseTime && !info[i].isRequested) {
-                amount += info[i].amount;
+                amount = amount.add(info[i].amount);
                 info[i].isRequested = true;
             }
         }
 
-        remainingAmount[msg.sender] -= amount;
-        token.transfer(msg.sender, amount);
+        remainingAmount[msg.sender] = remainingAmount[msg.sender].sub(amount);
+
+        require(token.transfer(msg.sender, amount), "FAIL TO TRANSFER");
 
         emit NewPayment(msg.sender, amount, remainingAmount[msg.sender]);
     }
@@ -132,7 +141,9 @@ contract AlgoPainterTimeLock is AlgoPainterAccessControl {
         onlyRole(DEFAULT_ADMIN_ROLE)
     {
         require(getNow() > emergencyWithdrawLimit, "IT IS NOT ALLOWED");
-        token.transfer(msg.sender, _amount);
+        require(token.transfer(msg.sender, _amount), "FAIL TO TRANSFER");
+
+        emit EmergencyWithdrawal(msg.sender, _amount);
     }
 
     function getRemainingAmount(address _beneficiary)
@@ -166,10 +177,6 @@ contract AlgoPainterTimeLock is AlgoPainterAccessControl {
             releaseTime = info[_index].releaseTime;
             amount = info[_index].amount;
             isRequested = info[_index].isRequested;
-        } else {
-            releaseTime = 0;
-            amount = 0;
-            isRequested = false;
         }
     }
 }
