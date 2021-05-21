@@ -16,7 +16,6 @@ abstract contract AlgoPainterAccessControl is AccessControl {
         _setupRole(WHITELIST_MANAGER_ROLE, _msgSender());
         _setupRole(SNAPSHOT_MANAGER, _msgSender());
         _setupRole(PAUSE_MANAGER, _msgSender());
-        _setupRole(EMERGENCY_ROLE, _msgSender());
     }
 
     modifier onlyRole(bytes32 role) {

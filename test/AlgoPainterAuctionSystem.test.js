@@ -10,7 +10,7 @@ contract('AlgoPainterAuctionSystem', accounts => {
   let gwei = null;
   let auction = null;
 
-  it.only('should deploy the contracts', async () => {
+  it('should deploy the contracts', async () => {
     algop = await AlgoPainterToken.new("AlgoPainter Token", "ALGOP");
     busd = await AlgoPainterToken.new("BUSD", "BUSD");
     eth = await AlgoPainterToken.new("ETH", "ETH");
@@ -25,7 +25,7 @@ contract('AlgoPainterAuctionSystem', accounts => {
     await gwei.mint(1, 'new text', false, 0, 2, amount, 'URI');
   });
 
-  it.only('should setup auction system', async () => {
+  it('should setup auction system', async () => {
     await auction.setup(accounts[9], 1000, 250, [algop.address, busd.address, eth.address]);
 
     expect(await auction.getAddressFee()).to.be.equal(accounts[9]);
@@ -40,7 +40,7 @@ contract('AlgoPainterAuctionSystem', accounts => {
     expect(allowedTokens[2]).to.be.equal(eth.address);
   });
 
-  it.only('should create an auction', async () => {
+  it('should create an auction', async () => {
     const now = parseInt((await auction.getNow()).toString());
     const expirationTime = (now + 20).toString();
 
@@ -67,7 +67,7 @@ contract('AlgoPainterAuctionSystem', accounts => {
     expect(auctionInfo.bidBackFee.toString()).to.be.equal('10000', 'fail to check bidBackFee');
   });
 
-  it.only('should send bids', async () => {
+  it('should send bids', async () => {
     const transferAmount = web3.utils.toWei('1000', 'ether');
     await algop.transfer(accounts[1], transferAmount);
     await algop.transfer(accounts[2], transferAmount);
@@ -124,7 +124,7 @@ contract('AlgoPainterAuctionSystem', accounts => {
     expect(auctionBalance.toString()).to.be.equal('294547500000000000000', 'fail to check auctionBalance #3');
   });
 
-  it.only('should end an auction', async () => {
+  it('should end an auction', async () => {
 
     const auctionId = await auction.getAuctionId(gwei.address, 1);
 
@@ -152,7 +152,7 @@ contract('AlgoPainterAuctionSystem', accounts => {
     expect(nftOwner).to.be.equal(auctionInfo.highestBidder, 'fail to check nftOwner');
   });
 
-  it.only('should withdraw remaining amounts', async () => {
+  it('should withdraw remaining amounts', async () => {
     const auctionId = await auction.getAuctionId(gwei.address, 1);
 
     let account1Balance = await algop.balanceOf(accounts[1]);
