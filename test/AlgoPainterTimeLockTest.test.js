@@ -3,7 +3,7 @@ const AlgoPainterTimeLock = artifacts.require('AlgoPainterTimeLock');
 var sleep = require('sleep');
 
 contract('AlgoPainterToken', accounts => {
-  it('should schedule a sequence of payments and request them', async () => {
+  it.only('should schedule a sequence of payments and request them', async () => {
     const algop = await AlgoPainterToken.new('AlgoPainter Token', 'ALGOP');
     const timelock = await AlgoPainterTimeLock.new(algop.address, 0);
 
@@ -62,7 +62,7 @@ contract('AlgoPainterToken', accounts => {
     expect(remainingAmount.toString()).to.be.equal('0', 'fail to check remaining amount #3 account #1');
   });
 
-  it('should fail to do a emergency withdrawal before the specified time', async () => {
+  it.only('should fail to do a emergency withdrawal before the specified time', async () => {
     const now = new Date();
     now.setSeconds(now.getSeconds() + 20);
     
@@ -70,26 +70,18 @@ contract('AlgoPainterToken', accounts => {
     const timelock = await AlgoPainterTimeLock.new(algop.address, Math.floor(now / 1000));
     
     await algop.transfer(timelock.address, web3.utils.toWei('10000', 'ether'));
-
+    console.log(1)
     try {
       await timelock.emergencyWithdraw(web3.utils.toWei('10000', 'ether'));
       throw {};
     } catch (e) {
-      expect(e.reason).to.be.equal('IT IS NOT ALLOWED');
+      expect(e.reason).to.be.equal('AlgoPainterAccessControl: INVALID_ROLE');
     }
-  });
-
-  it('should fail to do a emergency withdrawal before the specified time', async () => {
-    const now = new Date();
-    now.setSeconds(now.getSeconds() + 20);
     
-    const algop = await AlgoPainterToken.new('AlgoPainter Token', 'ALGOP');
-    const timelock = await AlgoPainterTimeLock.new(algop.address, Math.floor(now / 1000));
-    
-    await algop.transfer(timelock.address, web3.utils.toWei('10000', 'ether'));
+    await timelock.grantRole(await timelock.EMERGENCY_ROLE(), accounts[9]);
 
     try {
-      await timelock.emergencyWithdraw(web3.utils.toWei('10000', 'ether'));
+      await timelock.emergencyWithdraw(web3.utils.toWei('10000', 'ether'), {from: accounts[9]});
       throw {};
     } catch (e) {
       expect(e.reason).to.be.equal('IT IS NOT ALLOWED');
@@ -102,6 +94,7 @@ contract('AlgoPainterToken', accounts => {
     
     const algop = await AlgoPainterToken.new('AlgoPainter Token', 'ALGOP');
     const timelock = await AlgoPainterTimeLock.new(algop.address, Math.floor(now / 1000));
+    await timelock.grantRole(await timelock.EMERGENCY_ROLE(), accounts[9]);
     
     await algop.transfer(timelock.address, web3.utils.toWei('100000000', 'ether'));
     let balance = await algop.balanceOf(accounts[0]);
@@ -110,7 +103,7 @@ contract('AlgoPainterToken', accounts => {
 
     console.log('Waiting 20s to emergencyWithdraw');
     sleep.sleep(20);
-    await timelock.emergencyWithdraw(web3.utils.toWei('100000000', 'ether'));
+    await timelock.emergencyWithdraw(web3.utils.toWei('100000000', 'ether'), {from: accounts[9]});
     balance = await algop.balanceOf(accounts[0]);
     expect(balance.toString()).to.be.equal( web3.utils.toWei('100000000', 'ether').toString(), 'fail to check the balance after emergency withdraw');
   });
