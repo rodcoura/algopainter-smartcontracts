@@ -2,8 +2,8 @@ const AlgoPainterToken = artifacts.require('AlgoPainterToken');
 const AlgoPainterTimeLock = artifacts.require('AlgoPainterTimeLock');
 var sleep = require('sleep');
 
-contract('AlgoPainterToken', accounts => {
-  it.only('should schedule a sequence of payments and request them', async () => {
+contract.only('AlgoPainterToken', accounts => {
+  it('should schedule a sequence of payments and request them', async () => {
     const algop = await AlgoPainterToken.new('AlgoPainter Token', 'ALGOP');
     const timelock = await AlgoPainterTimeLock.new(algop.address, 0);
 
@@ -62,7 +62,7 @@ contract('AlgoPainterToken', accounts => {
     expect(remainingAmount.toString()).to.be.equal('0', 'fail to check remaining amount #3 account #1');
   });
 
-  it.only('should fail to do a emergency withdrawal before the specified time', async () => {
+  it('should fail to do a emergency withdrawal before the specified time', async () => {
     const now = new Date();
     now.setSeconds(now.getSeconds() + 20);
     
@@ -102,9 +102,9 @@ contract('AlgoPainterToken', accounts => {
 
 
     console.log('Waiting 20s to emergencyWithdraw');
-    sleep.sleep(20);
+    sleep.sleep(25);
     await timelock.emergencyWithdraw(web3.utils.toWei('100000000', 'ether'), {from: accounts[9]});
-    balance = await algop.balanceOf(accounts[0]);
+    balance = await algop.balanceOf(accounts[9]);
     expect(balance.toString()).to.be.equal( web3.utils.toWei('100000000', 'ether').toString(), 'fail to check the balance after emergency withdraw');
   });
 

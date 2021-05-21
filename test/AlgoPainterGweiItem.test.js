@@ -5,26 +5,26 @@ contract('AlgoPainterGweiItem', accounts => {
   let algop = null;
   let instance = null;
 
-  it.only('should deploy the contracts', async () => {
+  it('should deploy the contracts', async () => {
     algop = await AlgoPainterToken.new("AlgoPainter Token", "ALGOP");
     instance = await AlgoPainterGweiItem.new(algop.address, accounts[9]);
   });
   
-  it.only('should add account[2] as a white list manager', async () => {
+  it('should add account[2] as a white list manager', async () => {
     const validatorRole = await instance.WHITELIST_MANAGER_ROLE();
     await instance.grantRole(validatorRole, accounts[2]);
 
     expect(await instance.hasRole(validatorRole, accounts[2])).to.be.equal(true, 'fail to check accounts[1] as a validator');
   });
 
-  it.only('should add account[1] as a validator', async () => {
+  it('should add account[1] as a validator', async () => {
     const validatorRole = await instance.VALIDATOR_ROLE();
     await instance.grantRole(validatorRole, accounts[1]);
 
     expect(await instance.hasRole(validatorRole, accounts[1])).to.be.equal(true, 'fail to check accounts[1] as a validator');
   });
 
-  it.only('should whitelist account #2 and #3', async () => {
+  it('should whitelist account #2 and #3', async () => {
     await instance.manageWhitelist([accounts[2], accounts[3]], true);
     const account2Check = await instance.isInWhitelist(accounts[2]);
     const account3Check = await instance.isInWhitelist(accounts[3]);
@@ -33,7 +33,7 @@ contract('AlgoPainterGweiItem', accounts => {
     expect(account3Check).to.be.true;
   });
 
-  it.only('should mint a new paint', async () => {
+  it('should mint a new paint', async () => {
     const owner = accounts[2];
 
     const amount = await instance.getCurrentAmount(0, await instance.totalSupply());
@@ -57,7 +57,7 @@ contract('AlgoPainterGweiItem', accounts => {
     expect((await instance.getPIRS(0, 1)).toString()).to.be.equal('500');
   });
 
-  it.only('should check next batches', async () => {
+  it('should check next batches', async () => {
 
     expect((await instance.getCurrentAmount(0, 2)).toString()).to.be.equal('300000000000000000000');
     expect((await instance.getCurrentAmount(2)).toString()).to.be.equal('300000000000000000000');
@@ -77,7 +77,7 @@ contract('AlgoPainterGweiItem', accounts => {
     expect((await instance.getCurrentAmount(986)).toString()).to.be.equal('38400000000000000000000');
   });
 
-  it.only('should update a token URI based on a valid signature', async () => {
+  it('should update a token URI based on a valid signature', async () => {
     const tokenId = 1;
     const tokenURI = 'NEW_URI'
     const owner = accounts[2];
@@ -93,7 +93,7 @@ contract('AlgoPainterGweiItem', accounts => {
     expect(returnedTokenURI).to.be.equal('NEW_URI');
   });
 
-  it.only('should fail to update a token URI based on an invalid validator', async () => {
+  it('should fail to update a token URI based on an invalid validator', async () => {
     const tokenId = 1;
     const tokenURI = 'NEW_URI'
     const owner = accounts[2];
@@ -109,7 +109,7 @@ contract('AlgoPainterGweiItem', accounts => {
     }
   });
 
-  it.only('should fail to update a token URI based on an invalid signature', async () => {
+  it('should fail to update a token URI based on an invalid signature', async () => {
     const tokenURI = 'NEW_URI'
     const tokenId = 1;
     const owner = accounts[2];
@@ -124,7 +124,7 @@ contract('AlgoPainterGweiItem', accounts => {
     }
   });
 
-  it.only('should fail to update a token URI based on an invalid sender', async () => {
+  it('should fail to update a token URI based on an invalid sender', async () => {
     const tokenURI = 'NEW_URI'
     const tokenId = 1;
 
@@ -138,7 +138,7 @@ contract('AlgoPainterGweiItem', accounts => {
     }
   });
 
-  it.only('should unlock minting for everyone after 100 units', async () => {
+  it('should unlock minting for everyone after 100 units', async () => {
     const result1 = await instance.canMint(accounts[4], 10);
     const result2 = await instance.canMint(accounts[4], 101);
 
