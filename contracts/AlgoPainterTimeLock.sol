@@ -138,7 +138,7 @@ contract AlgoPainterTimeLock is AlgoPainterAccessControl {
 
     function emergencyWithdraw(uint256 _amount)
         public
-        onlyRole(DEFAULT_ADMIN_ROLE)
+        onlyRole(EMERGENCY_ROLE)
     {
         require(getNow() > emergencyWithdrawLimit, "IT IS NOT ALLOWED");
         require(token.transfer(msg.sender, _amount), "FAIL TO TRANSFER");
