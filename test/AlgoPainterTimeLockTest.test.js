@@ -2,7 +2,7 @@ const AlgoPainterToken = artifacts.require('AlgoPainterToken');
 const AlgoPainterTimeLock = artifacts.require('AlgoPainterTimeLock');
 var sleep = require('sleep');
 
-contract.only('AlgoPainterToken', accounts => {
+contract('AlgoPainterToken', accounts => {
   it('should schedule a sequence of payments and request them', async () => {
     const algop = await AlgoPainterToken.new('AlgoPainter Token', 'ALGOP');
     const timelock = await AlgoPainterTimeLock.new(algop.address, 0);
