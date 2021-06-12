@@ -24,7 +24,11 @@ contract.only('AlgoPainterExpressionsItem', accounts => {
     const returnedTokenURI = await instance.tokenURI(1);
 
     expect(returnedTokenURI).to.be.equal('URI');
-    expect((await web3.eth.getBalance(instance.address)).toString()).to.be.equal('0');
+    expect((await instance.getTokenUint256ConfigParameter(1, 1, 0)).toString()).to.be.equal('0');
+    expect((await instance.getTokenUint256ConfigParameter(1, 1, 1)).toString()).to.be.equal('1');
+    expect((await instance.getTokenUint256ConfigParameter(1, 1, 2)).toString()).to.be.equal('9');
+    expect((await instance.getTokenUint256ConfigParameter(1, 1, 3)).toString()).to.be.equal('1');
+    expect((await instance.getTokenUint256ConfigParameter(1, 1, 4)).toString()).to.be.equal('3');
   });
 
   it('should check next batches', async () => {

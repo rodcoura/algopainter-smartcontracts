@@ -39,7 +39,7 @@ contract AlgoPainterExpressionsItem is
     );
 
     constructor(address payable _devAddress, address payable _artistAddress)
-        ERC721("Expressions Item", "EXPI")
+        ERC721("Algo Painter Expressions Item", "APEXPI")
     {
         devAddress = _devAddress;
         artistAddress = _artistAddress;
@@ -53,7 +53,7 @@ contract AlgoPainterExpressionsItem is
         returns (string memory)
     {
         require(_algoPainterId == 1, "AlgoPainterExpressionsItem:INVALID_ID");
-        return "Expressions";
+        return "Expressions my ManWithNoName";
     }
 
     function setServiceFee(uint256 _serviceFee)
