@@ -46,6 +46,7 @@ contract AlgoPainterAuctionSystem is
     mapping(IERC20 => bool) private allowedTokensMapping;
 
     event AuctionCreated(
+        address creator,
         address tokenAddress,
         uint256 tokenId,
         uint256 minimumAmount,
@@ -258,6 +259,7 @@ contract AlgoPainterAuctionSystem is
         auctions[_tokenAddress][_tokenId] = auctionInfo.length.sub(1);
 
         emit AuctionCreated(
+            msg.sender,
             _tokenAddress,
             _tokenId,
             _minimumAmount,
