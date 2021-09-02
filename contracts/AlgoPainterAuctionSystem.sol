@@ -45,6 +45,15 @@ contract AlgoPainterAuctionSystem is
     IERC20[] private allowedTokens;
     mapping(IERC20 => bool) private allowedTokensMapping;
 
+    event AuctionCreated(
+        address tokenAddress,
+        uint256 tokenId,
+        uint256 minimumAmount,
+        uint256 auctionEndTime,
+        IERC20 tokenPriceAddress,
+        uint256 bidBackFee
+    );
+
     event HighestBidIncreased(
         uint256 indexed auctionId,
         address bidder,
@@ -247,6 +256,15 @@ contract AlgoPainterAuctionSystem is
         );
 
         auctions[_tokenAddress][_tokenId] = auctionInfo.length.sub(1);
+
+        emit AuctionCreated(
+            _tokenAddress,
+            _tokenId,
+            _minimumAmount,
+            _auctionEndTime,
+            _tokenPriceAddress,
+            _bidBackFee
+        );
 
         return auctions[_tokenAddress][_tokenId];
     }
